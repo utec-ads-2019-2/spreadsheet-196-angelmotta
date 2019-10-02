@@ -53,8 +53,9 @@ struct spreadhsheet{
 				if(str_value[0] == '='){
 					//printf("Guardar formula: %s\n",str_value);
 					formula f1(i,j,str_value);
+					//printf("Struct : %s\n",str_value);
 					formulas_vec.push_back(f1);
-					printf("read Formula: %s \n",formulas_vec[j].form);
+					//printf("read Formula: %s \n",formulas_vec[j].form);
 					arr_spread[i][j] = 0;
 				}
 				else{
@@ -113,22 +114,27 @@ struct spreadhsheet{
 		}
 	}
 
+	void calculate_celda(const int x, const int y, const formula f1){
+		arr_spread[f1.row][f1.col] += arr_spread[x][y];
+	}
+
 	void execute_formula(){
-		printf("%s\n", "-- Execute cell formulas --");
+		//printf("%s\n", "-- Execute cell formulas --");
 		for(auto f1 : formulas_vec){
-			printf("Formula: %s - En Fila: %d - En columna: %d \n", f1.form, f1.row, f1.col);
+			//printf("Formula: %s - En Fila: %d - En columna: %d \n", f1.form, f1.row, f1.col);
 			vector<string> expresion_vec;
 			read_linea_form(f1.form, expresion_vec);
 			for(auto celda : expresion_vec){
 				int x = 0, y = -1;
 				get_celda_index(celda, x, y);
-				printf("X: %d - Y: %d \n",x,y);
+				//printf("X: %d - Y: %d \n",x,y);
+				calculate_celda(x,y,f1);
 			}
 		}
 	}
 
 	void print_spreadsheet(){
-		printf("%s\n", "-- Print spreadhsheet --");
+		//printf("%s\n", "-- Print spreadhsheet --");
 		for(int i=0; i<rows; ++i){
 			for(int j=0; j<cols; ++j){
 				printf("%d ", arr_spread[i][j]);
@@ -159,9 +165,9 @@ int main(){
 		scanf("%d %d",&cols, &rows);
 		spreadhsheet sp(rows, cols);
 		sp.input_values();
-		sp.print_formulas();
-		sp.print_spreadsheet();
+		//sp.print_formulas();
 		sp.execute_formula();
+		sp.print_spreadsheet();
 	}
 
 	return 0;
