@@ -2,6 +2,7 @@
 #include <vector>
 #include <string>
 #include <cmath>
+#include <cstring>
 
 using namespace std;
 
@@ -98,7 +99,7 @@ struct spreadhsheet{
 		//printf("%s\n",cel_name.c_str());
 	}
 
-	void get_celda_index(const string celda, int &x, int &y){
+	void get_operando_index(const string celda, int &x, int &y){
 		int exponent = 0;
 		for(int i=0; i<celda.size(); ++i){
 			if(int(celda[i]) >= 65){
@@ -114,22 +115,52 @@ struct spreadhsheet{
 		}
 	}
 
-	void calculate_celda(const int x, const int y, const formula f1){
+	void calculate_celda(const int x, const int y, const formula f1){		// ANALIZAR Si la celda es formula antes de sumar
 		arr_spread[f1.row][f1.col] += arr_spread[x][y];
+	}
+
+	bool is_there_other_formula(int x, int y){
+		for(auto f_exp : formulas_vec){
+			if(f_exp.row == x && f_exp.col == y) return true;
+		}
+		return false;
 	}
 
 	void execute_formula(){
 		//printf("%s\n", "-- Execute cell formulas --");
-		for(auto f1 : formulas_vec){
-			//printf("Formula: %s - En Fila: %d - En columna: %d \n", f1.form, f1.row, f1.col);
-			vector<string> expresion_vec;
-			read_linea_form(f1.form, expresion_vec);
-			for(auto celda : expresion_vec){
-				int x = 0, y = -1;
-				get_celda_index(celda, x, y);
-				//printf("X: %d - Y: %d \n",x,y);
-				calculate_celda(x,y,f1);
-			}
+		int execute_form = 1;
+		while(formulas_vec.size()){
+			//for(auto f_exp : formulas_vec){		// Toma Cada formula (Struct) del Vector
+			//printf("%s\n","Inicio while");
+			for(int i=0; i<formulas_vec.size(); ++i){		// Toma Cada formula (Struct) del Vector
+				//printf("Inicio check de Formula: %s - En Fila: %d - En columna: %d \n", formulas_vec[i].form, formulas_vec[i].row, formulas_vec[i].col);
+				vector<string> expresion_vec;
+				read_linea_form(formulas_vec[i].form, expresion_vec);	// envia el char array del Struct Formula y el vector string vacio
+				
+				//Analiza si se puede computar la expresion
+				for(auto operando : expresion_vec){		// itera cada operando de la formula
+					int x = 0, y = -1;
+					get_operando_index(operando, x, y);		// Obtiene la ubicacion en la matriz
+					if(is_there_other_formula(x,y)){
+						execute_form = 0;
+						break;	// analiza otra formula del vector formulas_vec
+					}
+				}
+				//printf("Execute_form : %d\n",execute_form);
+				//Execute Formula
+				if(execute_form){
+					for(auto operando : expresion_vec){		// itera cada operando de la formula
+						int x = 0, y = -1;
+						get_operando_index(operando, x, y);		// Obtiene la ubicacion en la matriz
+						calculate_celda(x,y,formulas_vec[i]);				// AQUI!!!	
+					}
+					//DELETE
+					formulas_vec.erase(formulas_vec.begin() + i);
+					break;
+				}
+				execute_form = 1;
+				//printf("Fin check de Formula: %s - En Fila: %d - En columna: %d \n", formulas_vec[i].form, formulas_vec[i].row, formulas_vec[i].col);
+			}	// Toma la siguiente formula (Struct) del Vector
 		}
 	}
 
@@ -137,7 +168,10 @@ struct spreadhsheet{
 		//printf("%s\n", "-- Print spreadhsheet --");
 		for(int i=0; i<rows; ++i){
 			for(int j=0; j<cols; ++j){
-				printf("%d ", arr_spread[i][j]);
+				if(j == cols-1){
+					printf("%d", arr_spread[i][j]);	
+				}
+				else printf("%d ", arr_spread[i][j]);
 			}
 			printf("\n");
 		}
