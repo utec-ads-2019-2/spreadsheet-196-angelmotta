@@ -1,5 +1,7 @@
 #include <cstdio>
 #include <vector>
+#include <string>
+#include <cmath>
 
 using namespace std;
 
@@ -24,6 +26,7 @@ struct spreadhsheet{
 	int rows = 0, cols = 0;
 	int **arr_spread = nullptr;
 	vector<formula> formulas_vec;
+
 	spreadhsheet(int _rows, int _cols){
 		rows = _rows;
 		cols = _cols;
@@ -74,6 +77,56 @@ struct spreadhsheet{
 		}*/
 	}
 
+	void read_linea_form(char *form, vector<string> &expresion_vec){
+		string cel_name = "";
+		for(int i=1;i<100000; ++i){
+			if(form[i] == ' ') break;
+			if(form[i] == '+'){
+				//printf("\n");
+				// Update 
+				expresion_vec.push_back(cel_name);
+				//printf("%s\n",cel_name.c_str());
+				// Reset
+				cel_name="";
+				continue;
+			}
+			//printf("%c", form[i]);
+			cel_name += form[i];
+		}
+		expresion_vec.push_back(cel_name);	// Update the last cell
+		//printf("%s\n",cel_name.c_str());
+	}
+
+	void get_celda_index(const string celda, int &x, int &y){
+		int exponent = 0;
+		for(int i=0; i<celda.size(); ++i){
+			if(int(celda[i]) >= 65){
+				exponent++;
+			}
+			else break;
+		}
+		x = stoi(celda.substr(exponent)) - 1;
+		int index_celda = 0;
+		for(int i=exponent-1; i>=0; --i){
+			y += (int(celda[index_celda]) - 64) * pow(26,i);
+			index_celda++;
+		}
+	}
+
+	void execute_formula(){
+		printf("%s\n", "-- Execute cell formulas --");
+		for(auto f1 : formulas_vec){
+			printf("Formula: %s - En Fila: %d - En columna: %d \n", f1.form, f1.row, f1.col);
+			vector<string> expresion_vec;
+			read_linea_form(f1.form, expresion_vec);
+			for(auto celda : expresion_vec){
+				int x = 0, y = -1;
+				get_celda_index(celda, x, y);
+				printf("X: %d - Y: %d \n",x,y);
+			}
+		}
+	}
+
 	void print_spreadsheet(){
 		printf("%s\n", "-- Print spreadhsheet --");
 		for(int i=0; i<rows; ++i){
@@ -108,6 +161,7 @@ int main(){
 		sp.input_values();
 		sp.print_formulas();
 		sp.print_spreadsheet();
+		sp.execute_formula();
 	}
 
 	return 0;
