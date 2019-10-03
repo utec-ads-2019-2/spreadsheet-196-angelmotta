@@ -66,7 +66,7 @@ struct spreadhsheet{
 	int rows = 0, cols = 0;
 	int **arr_spread = nullptr;
 	bool **arr_check_formulas = nullptr;
-	vector<formula> formulas_vec;
+	vector<formula*> formulas_vec;
 
 	spreadhsheet(int _rows, int _cols){
 		rows = _rows;
@@ -84,21 +84,14 @@ struct spreadhsheet{
 	void input_values(){
 		//printf("%s\n","INPUT VALUES" );
 		int value = 0;
-		//char *str_value = nullptr;
 		char str_value[100000];
 		size_t n;
 		for(int i=0; i<rows; ++i){
 			for(int j=0; j<cols; ++j){
-				/*if(i == 1 && j == 1){
-					printf("fffxread Formula: %s \n",formulas_vec[j-1].form);
-				}*/
-				//scanf("%d",&value);
 				scanf("%99999s", str_value);
-				//printf("Ingresaste: %s\n",str_value);
 				if(str_value[0] == '='){
-					//printf("Guardar formula: %s\n",str_value);
-					formula f1(i,j,str_value);
-					//printf("Struct : %s\n",str_value);
+					//formula f1(i,j,str_value);
+					formula* f1 = new formula(i,j,str_value);
 					formulas_vec.push_back(f1);
 					//printf("read Formula: %s \n",formulas_vec[j].form);
 					arr_spread[i][j] = 0;
@@ -115,16 +108,15 @@ struct spreadhsheet{
 		//printf("xxxxread Formula: %s \n",formulas_vec[1].form);
 	}
 
-	void print_formulas(){
+	/*void print_formulas(){
 		printf("%s\n", "-- Print Vector of formulas --");
 		for(auto f1 : formulas_vec){
 			printf("Formula: %s - En Fila: %d - En columna: %d \n", f1.form, f1.row, f1.col);
 		}
-	}
+	}*/
 
 	void execute_formula(){
 		//printf("%s\n", "-- Start Execution cell formulas --");
-		//int execute_form = 1;
 		while(formulas_vec.size() > 0){
 			//printf("formulas_vec size: %lu\n",formulas_vec.size());
 			for(int i=0; i<formulas_vec.size(); ++i){		// Toma Cada formula (Struct) del Vector
@@ -133,7 +125,7 @@ struct spreadhsheet{
 				int execute_form = 1;
 				// Analiza si puede ejecutar
 				//printf("%s\n", "-- Start check execution cell formulas --");
-				for(auto sumando : formulas_vec[i].operandos){
+				for(auto sumando : formulas_vec[i]->operandos){
 					if(arr_check_formulas[sumando.first][sumando.second]){
 						execute_form = 0;	
 						break;
@@ -144,19 +136,16 @@ struct spreadhsheet{
 				if(execute_form){
 					//printf("%s\n", "-- Start sum cell formulas --");
 					int result = 0;
-					//for(auto sumando : formulas_vec[i].operandos){		// itera cada operando de la formula
-					for(int j = 0; j < formulas_vec[i].operandos.size(); ++j){		// itera cada operando de la formula
-						//arr_spread[formulas_vec[i].row][formulas_vec[i].col] += arr_spread[sumando.first][sumando.second];
-						result += arr_spread[formulas_vec[i].operandos[j].first][formulas_vec[i].operandos[j].second];
+					for(int j = 0; j < formulas_vec[i]->operandos.size(); ++j){		// itera cada operando de la formula
+						result += arr_spread[formulas_vec[i]->operandos[j].first][formulas_vec[i]->operandos[j].second];
 					}
-					arr_spread[formulas_vec[i].row][formulas_vec[i].col] = result;
-					arr_check_formulas[formulas_vec[i].row][formulas_vec[i].col] = 0;
+					arr_spread[formulas_vec[i]->row][formulas_vec[i]->col] = result;
+					arr_check_formulas[formulas_vec[i]->row][formulas_vec[i]->col] = 0;
 					//DELETE
 					formulas_vec.erase(formulas_vec.begin() + i);
 					//printf("%s\n", "-- End sum cell formulas --");
 				}
-				//formulas_vec.erase(formulas_vec.begin());  // TEEEEEEEEEEEEESSTTTTTTTTTTTT************************
-			}	// Toma la siguiente formula (Struct) del Vector
+			}
 			//break;
 		}
 	}
@@ -185,7 +174,6 @@ struct spreadhsheet{
 };
 
 int main(){
-	auto t1 = std::chrono::high_resolution_clock::now();
 	int num_spreadsheet = 0;
 	int cols = 0 , rows = 0;
 	scanf("%d",&num_spreadsheet);
@@ -197,9 +185,5 @@ int main(){
 		sp.execute_formula();
 		sp.print_spreadsheet();
 	}
-	printf("\n");
-	auto t2 = std::chrono::high_resolution_clock::now();
-    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>( t2 - t1 ).count();
-    //std::cout << "duration: " <<duration << " milliseconds" << '\n';
 	return 0;
 }
